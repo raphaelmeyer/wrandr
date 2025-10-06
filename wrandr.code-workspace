@@ -1,0 +1,30 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+  ],
+  "extensions": {
+    "recommendations": [
+      "haskell.haskell",
+      "streetsidesoftware.code-spell-checker"
+    ]
+  },
+  "settings": {
+    "editor.renderWhitespace": "boundary",
+    "editor.formatOnSave": true,
+    "haskell.manageHLS": "GHCup",
+    "haskell.upgradeGHCup": false,
+    "haskell.toolchain": {
+      "cabal": "recommended",
+      "hls": "recommended",
+      "ghc": "recommended"
+    },
+    "[jsonc][json]": {
+      "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[haskell]": {
+      "editor.inlayHints.enabled": "offUnlessPressed"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+cabal-version:      3.0
+
+name:               wrandr
+version:            0.1.0.0
+license:            MIT
+license-file:       LICENSE
+
+category:           System
+build-type:         Simple
+
+common common-properties
+    ghc-options: -Wall -Werror
+    default-language: Haskell2010
+    build-depends:
+        base >= 4.18.3 && < 4.19,
+        text
+
+library wlr-monitors
+    import:           common-properties
+    hs-source-dirs:   src
+
+    exposed-modules:
+        Json
+
+    build-depends:
+        containers
+
+executable wrandr
+    import:           common-properties
+    main-is:          Main.hs
+    hs-source-dirs:   app
+    ghc-options: -threaded
+
+    build-depends:
+        wlr-monitors
+
+test-suite wrandr-test
+    import:           common-properties
+    type: exitcode-stdio-1.0
+    hs-source-dirs: test
+    main-is: Spec.hs
+
+    other-modules:
+        JsonSpec
+
+    build-depends:
+        wlr-monitors,
+        hspec,
+        containers
+
+    build-tool-depends:
+        hspec-discover:hspec-discover
