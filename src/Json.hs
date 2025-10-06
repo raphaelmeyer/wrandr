@@ -2,7 +2,6 @@ module Json (KeyValues, Json (..), parse) where
 
 import Control.Applicative ((<|>))
 import qualified Data.Char as Char
-import qualified Data.Functor as Functor
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import qualified Text.ParserCombinators.ReadP as ReadP
@@ -19,9 +18,12 @@ data Json
   deriving (Eq, Show)
 
 parse :: Text.Text -> Maybe Json
-parse input = case ReadP.readP_to_S json $ Text.unpack input of
+parse input = case ReadP.readP_to_S parseAll $ Text.unpack input of
   [(result, _)] -> Just result
   _ -> Nothing
+
+parseAll :: ReadP.ReadP Json
+parseAll = json <* ReadP.skipSpaces <* ReadP.eof
 
 json :: ReadP.ReadP Json
 json =
@@ -34,16 +36,16 @@ json =
 
 array :: ReadP.ReadP Json
 array = do
-  ReadP.skipSpaces <* ReadP.char '['
-  items <- ReadP.sepBy json comma
-  ReadP.skipSpaces <* ReadP.char ']'
+  items <-
+    ReadP.between (consume '[') (consume ']') $
+      ReadP.sepBy json comma
   pure $ Array items
 
 object :: ReadP.ReadP Json
 object = do
-  ReadP.skipSpaces <* ReadP.char '{'
-  items <- ReadP.sepBy keyValue comma
-  ReadP.skipSpaces <* ReadP.char '}'
+  items <-
+    ReadP.between (consume '{') (consume '}') $
+      ReadP.sepBy keyValue comma
   pure $ Object (Map.fromList items)
 
 string :: ReadP.ReadP Json
@@ -57,7 +59,7 @@ boolean = do
 number :: ReadP.ReadP Json
 number = do
   ReadP.skipSpaces
-  sign <- ReadP.option id (negate <$ ReadP.char '-')
+  sign <- ReadP.option id (negate <$ consume '-')
   intPart <- ReadP.munch1 Char.isDigit
   fracPart <- ReadP.option "" $ do
     (:) <$> ReadP.char '.' <*> ReadP.munch1 Char.isDigit
@@ -69,32 +71,26 @@ null = Null <$ ReadP.skipSpaces <* ReadP.string "null"
 
 keyValue :: ReadP.ReadP (Text.Text, Json)
 keyValue = do
-  key <- identifier
-  ReadP.skipSpaces <* ReadP.char ':'
+  key <- stringValue
+  consume ':'
   value <- json
   pure (key, value)
 
-identifier :: ReadP.ReadP Text.Text
-identifier = do
-  ReadP.skipSpaces
-  Functor.void $ ReadP.char '"'
-  content <- ReadP.many (ReadP.satisfy Char.isAlphaNum)
-  Functor.void $ ReadP.char '"'
-  pure $ Text.pack content
-
 stringValue :: ReadP.ReadP Text.Text
 stringValue = do
-  ReadP.skipSpaces
-  Functor.void $ ReadP.char '"'
-  content <- ReadP.many (ReadP.satisfy (/= '"'))
-  Functor.void $ ReadP.char '"'
+  content <-
+    ReadP.between (consume '"') (consume '"') $
+      ReadP.many (ReadP.satisfy (/= '"'))
   pure $ Text.pack content
 
 true :: ReadP.ReadP Json
 true = Boolean True <$ ReadP.skipSpaces <* ReadP.string "true"
 
 false :: ReadP.ReadP Json
-false = Boolean True <$ ReadP.skipSpaces <* ReadP.string "false"
+false = Boolean False <$ ReadP.skipSpaces <* ReadP.string "false"
 
 comma :: ReadP.ReadP ()
 comma = ReadP.skipSpaces <* ReadP.char ','
+
+consume :: Char -> ReadP.ReadP ()
+consume c = ReadP.skipSpaces <* ReadP.char c

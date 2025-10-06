@@ -20,7 +20,10 @@ library wlr-monitors
     hs-source-dirs:   src
 
     exposed-modules:
-        Json
+        Application,
+        Json,
+        Monitor,
+        WlrRandr
 
     build-depends:
         containers
@@ -41,7 +44,8 @@ test-suite wrandr-test
     main-is: Spec.hs
 
     other-modules:
-        JsonSpec
+        JsonSpec,
+        MonitorSpec
 
     build-depends:
         wlr-monitors,
