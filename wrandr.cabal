@@ -21,12 +21,14 @@ library wlr-monitors
 
     exposed-modules:
         Application,
+        Exception,
         Json,
         Monitor,
         WlrRandr
 
     build-depends:
-        containers
+        containers,
+        process
 
 executable wrandr
     import:           common-properties
