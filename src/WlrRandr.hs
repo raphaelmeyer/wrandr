@@ -5,15 +5,13 @@ import qualified Data.Text as Text
 import qualified Exception
 import qualified Json
 import qualified Monitor
+import qualified MonitorList
 import qualified System.Exit as Exit
 import qualified System.Process as Proc
 
 allMonitors :: IO [Monitor.Info]
 allMonitors = do
-  text <- queryWlr
-  let json = Json.parse text
-  print json
-  pure []
+  maybe [] MonitorList.from . Json.parse <$> queryWlr
 
 queryWlr :: IO Text.Text
 queryWlr = do

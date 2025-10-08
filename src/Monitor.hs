@@ -11,7 +11,7 @@ data Mode
 
 data Info = Info
   { name :: Text.Text,
-    mode :: Mode,
+    current :: Mode,
     available :: [Mode]
   }
   deriving (Eq, Show)

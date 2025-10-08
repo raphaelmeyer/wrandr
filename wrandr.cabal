@@ -24,6 +24,7 @@ library wlr-monitors
         Exception,
         Json,
         Monitor,
+        MonitorList,
         WlrRandr
 
     build-depends:
@@ -47,12 +48,14 @@ test-suite wrandr-test
 
     other-modules:
         JsonSpec,
+        MonitorListSpec,
         MonitorSpec
 
     build-depends:
         wlr-monitors,
         hspec,
-        containers
+        containers,
+        string-qq
 
     build-tool-depends:
         hspec-discover:hspec-discover

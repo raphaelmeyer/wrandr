@@ -13,6 +13,7 @@
   "settings": {
     "editor.renderWhitespace": "boundary",
     "editor.formatOnSave": true,
+    "editor.tabSize": 2,
     "haskell.manageHLS": "GHCup",
     "haskell.upgradeGHCup": false,
     "haskell.toolchain": {
