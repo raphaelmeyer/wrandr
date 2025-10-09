@@ -25,11 +25,14 @@ library wlr-monitors
         Json,
         Monitor,
         MonitorList,
+        UI,
         WlrRandr
 
     build-depends:
+        brick,
         containers,
-        process
+        process,
+        vty
 
 executable wrandr
     import:           common-properties
