@@ -22,6 +22,7 @@ library wlr-monitors
     exposed-modules:
         Application,
         Exception,
+        Focus,
         Json,
         Monitor,
         MonitorList,
@@ -50,6 +51,7 @@ test-suite wrandr-test
     main-is: Spec.hs
 
     other-modules:
+        FocusSpec,
         JsonSpec,
         MonitorListSpec,
         MonitorSpec

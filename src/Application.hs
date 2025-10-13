@@ -2,6 +2,7 @@ module Application (run) where
 
 import qualified Brick.Main as M
 import qualified Brick.Types as T
+import qualified Focus
 import qualified Graphics.Vty as Vty
 import qualified UI
 import qualified WlrRandr
@@ -25,10 +26,22 @@ mkApp =
 resetMonitorInfo :: IO UI.State
 resetMonitorInfo = do
   monitors <- WlrRandr.allMonitors
-  pure $ UI.State monitors
+  pure $ UI.State monitors (Focus.first monitors)
+
+focusPreviousMonitor :: UI.State -> UI.State
+focusPreviousMonitor (UI.State monitors focus) =
+  UI.State monitors $
+    Focus.previousMonitor monitors focus
+
+focusNextMonitor :: UI.State -> UI.State
+focusNextMonitor (UI.State monitors focus) =
+  UI.State monitors $
+    Focus.nextMonitor monitors focus
 
 handleEvent :: T.BrickEvent UI.Name e -> T.EventM UI.Name UI.State ()
 handleEvent (T.VtyEvent e) = case e of
+  Vty.EvKey Vty.KLeft [] -> T.modify focusPreviousMonitor
+  Vty.EvKey Vty.KRight [] -> T.modify focusNextMonitor
   Vty.EvKey Vty.KEsc [] -> M.halt
   Vty.EvKey (Vty.KChar 'q') [] -> M.halt
   _ -> pure ()
