@@ -2,8 +2,10 @@ module Application (run) where
 
 import qualified Brick.Main as M
 import qualified Brick.Types as T
+import qualified Data.Text as Text
 import qualified Focus
 import qualified Graphics.Vty as Vty
+import qualified Monitor
 import qualified UI
 import qualified WlrRandr
 
@@ -44,5 +46,36 @@ handleEvent (T.VtyEvent e) = case e of
   Vty.EvKey Vty.KRight [] -> T.modify focusNextMonitor
   Vty.EvKey Vty.KEsc [] -> M.halt
   Vty.EvKey (Vty.KChar 'q') [] -> M.halt
+  Vty.EvKey (Vty.KChar 'd') [] -> T.put fakeMonitors
   _ -> pure ()
 handleEvent _ = pure ()
+
+fakeMonitors :: UI.State
+fakeMonitors = UI.State monitors focus
+  where
+    monitors =
+      [ Monitor.Info
+          (Text.pack "Foo")
+          (Monitor.Mode 320 240)
+          [ Monitor.Mode 1024 768,
+            Monitor.Mode 640 480,
+            Monitor.Mode 320 240
+          ],
+        Monitor.Info
+          (Text.pack "Bar")
+          (Monitor.Mode 1920 1200)
+          [ Monitor.Mode 3840 2160,
+            Monitor.Mode 2560 1440,
+            Monitor.Mode 1920 1200,
+            Monitor.Mode 1920 1080,
+            Monitor.Mode 1600 1200,
+            Monitor.Mode 1600 900
+          ],
+        Monitor.Info
+          (Text.pack "HDMI")
+          (Monitor.Mode 1920 1080)
+          [ Monitor.Mode 1920 1080,
+            Monitor.Mode 1280 720
+          ]
+      ]
+    focus = Focus.first monitors
