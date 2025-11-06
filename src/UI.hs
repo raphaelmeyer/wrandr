@@ -84,11 +84,13 @@ legendWidget = Core.hBox $ map columnWidget legendItems
 
 legendItems :: [[Text.Text]]
 legendItems =
-  [ [ "↑ ↓ Select mode",
-      "← → Select monitor"
+  [ [ "↑ ↓ Focus mode",
+      "← → Focus monitor"
     ],
-    [ "q ESC Quit",
-      "ENTER Apply"
+    [ "ENTER Select mode",
+      "a     Apply"
+    ],
+    [ "q ESC Quit"
     ]
   ]
 
