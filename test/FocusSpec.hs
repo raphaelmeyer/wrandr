@@ -15,6 +15,14 @@ hdmi2 = Monitor.Info "HDMI-2" Monitor.Off []
 edp :: Monitor.Info
 edp = Monitor.Info "eDP-1" Monitor.Off []
 
+modes :: [Monitor.Mode]
+modes =
+  [ Monitor.Mode 3840 2160,
+    Monitor.Mode 2560 1440,
+    Monitor.Mode 1920 1080,
+    Monitor.Mode 1600 900
+  ]
+
 spec :: Spec
 spec = do
   describe "focus first monitor" $ do
@@ -26,6 +34,25 @@ spec = do
 
     it "should focus the first monitor" $ do
       Focus.first [hdmi, edp] `shouldBe` Just (Focus.Focus "HDMI-1" Monitor.Off)
+
+    it "should focus off if no modes are available" $ do
+      let mode = Focus.mode <$> Focus.first [hdmi]
+      mode `shouldBe` Just Monitor.Off
+
+    it "should focus the current mode" $ do
+      let monitor = hdmi {Monitor.current = Monitor.Mode 1920 1080, Monitor.available = modes}
+          mode = Focus.mode <$> Focus.first [monitor]
+      mode `shouldBe` Just (Monitor.Mode 1920 1080)
+
+    it "should focus off if the monitor is currently off" $ do
+      let monitor = hdmi {Monitor.current = Monitor.Off, Monitor.available = modes}
+          mode = Focus.mode <$> Focus.first [monitor]
+      mode `shouldBe` Just Monitor.Off
+
+    it "should focus off if the current mode is not available" $ do
+      let monitor = hdmi {Monitor.current = Monitor.Mode 1024 768, Monitor.available = modes}
+          mode = Focus.mode <$> Focus.first [monitor]
+      mode `shouldBe` Just Monitor.Off
 
   describe "focus next monitor" $ do
     it "should focus the first monitor if nothing is focused" $ do

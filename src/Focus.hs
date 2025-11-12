@@ -6,6 +6,7 @@ module Focus
   )
 where
 
+import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
 import qualified Monitor
 
@@ -17,7 +18,7 @@ data Focus = Focus
 
 first :: [Monitor.Info] -> Maybe Focus
 first [] = Nothing
-first (m : _) = Just $ Focus (Monitor.name m) Monitor.Off
+first (m : _) = Just $ Focus (Monitor.name m) (currentMode m)
 
 previousMonitor :: [Monitor.Info] -> Maybe Focus -> Maybe Focus
 previousMonitor monitors focus =
@@ -58,3 +59,13 @@ findNextMonitor (left : right : ms) f =
   if Monitor.name left == monitor f
     then Just right
     else findNextMonitor (right : ms) f
+
+currentMode :: Monitor.Info -> Monitor.Mode
+currentMode m =
+  Maybe.fromMaybe
+    Monitor.Off
+    (findMode (Monitor.available m) (Monitor.current m))
+
+findMode :: [Monitor.Mode] -> Monitor.Mode -> Maybe Monitor.Mode
+findMode [] _ = Nothing
+findMode (a : as) current = if current == a then Just a else findMode as current
