@@ -8,6 +8,7 @@ import qualified Brick.Util as Util
 import qualified Brick.Widgets.Border as Border
 import qualified Brick.Widgets.Center as Center
 import qualified Brick.Widgets.Core as Core
+import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
 import qualified Focus
 import qualified Graphics.Vty as Vty
@@ -53,42 +54,52 @@ monitorListWidget state =
 
 monitorWidget :: Maybe Focus.Focus -> Monitor.Info -> T.Widget Name
 monitorWidget focus monitor =
-  monitorFrameWidget monitor focus
+  monitorFrameWidget (Maybe.isJust focusedMode) monitor
     . Core.hLimit 20
     . Core.vBox
     $ [ currentModeWidget monitor,
         Border.hBorder,
-        availableModesWidget monitor
+        availableModesWidget focusedMode monitor
       ]
+  where
+    focusedMode = focus >>= getFocusedMode monitor
 
-monitorFrameWidget :: Monitor.Info -> Maybe Focus.Focus -> T.Widget Name -> T.Widget Name
-monitorFrameWidget monitor focus = Border.borderWithLabel . Core.padLeftRight 1 $ title monitor
+monitorFrameWidget :: Bool -> Monitor.Info -> T.Widget Name -> T.Widget Name
+monitorFrameWidget focused monitor =
+  Border.borderWithLabel
+    . Core.padLeftRight 1
+    $ title monitor
   where
     title = style . Core.txt . Monitor.name
-    style = if isMonitorFocused monitor focus then Core.withAttr aFocus else id
+    style = if focused then Core.withAttr aFocus else id
 
 currentModeWidget :: Monitor.Info -> T.Widget Name
-currentModeWidget monitor =
+currentModeWidget =
   Core.padTop (Core.Pad 1)
     . Center.hCenter
     . Core.str
     . show
-    $ Monitor.current monitor
+    . Monitor.current
 
-availableModesWidget :: Monitor.Info -> T.Widget Name
-availableModesWidget monitor =
+availableModesWidget :: Maybe Monitor.Mode -> Monitor.Info -> T.Widget Name
+availableModesWidget focusedMode monitor =
   let name = Monitor.name monitor
    in Core.vLimit 4
         . Core.viewport (Name name) T.Vertical
         . Core.vBox
-        $ map availableModeWidget (Monitor.available monitor)
+        $ map (availableModeWidget focusedMode) (Monitor.available monitor)
 
-availableModeWidget :: Monitor.Mode -> T.Widget Name
-availableModeWidget =
+availableModeWidget :: Maybe Monitor.Mode -> Monitor.Mode -> T.Widget Name
+availableModeWidget focusedMode mode =
   Core.padLeft Core.Max
     . Core.padRight (Core.Pad 1)
+    . style
     . Core.str
     . show
+    $ mode
+  where
+    focused = isModeFocused focusedMode mode
+    style = if focused then Core.visible . Core.withAttr aFocus else id
 
 legendWidget :: T.Widget Name
 legendWidget = Core.hBox $ map columnWidget legendItems
@@ -110,6 +121,12 @@ legendItems =
 titleFrameWidget :: Text.Text -> T.Widget Name -> T.Widget Name
 titleFrameWidget = Border.borderWithLabel . Core.padLeftRight 1 . Core.txt
 
-isMonitorFocused :: Monitor.Info -> Maybe Focus.Focus -> Bool
-isMonitorFocused _ Nothing = False
-isMonitorFocused monitor (Just focus) = Monitor.name monitor == Focus.monitor focus
+getFocusedMode :: Monitor.Info -> Focus.Focus -> Maybe Monitor.Mode
+getFocusedMode m focus =
+  if Monitor.name m == Focus.monitor focus
+    then Just $ Focus.mode focus
+    else Nothing
+
+isModeFocused :: Maybe Monitor.Mode -> Monitor.Mode -> Bool
+isModeFocused Nothing _ = False
+isModeFocused (Just focused) mode = mode == focused
