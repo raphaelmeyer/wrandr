@@ -9,13 +9,6 @@ data Mode
       }
   | Off
 
-data Info = Info
-  { name :: Text.Text,
-    current :: Mode,
-    available :: [Mode]
-  }
-  deriving (Eq, Show)
-
 instance Eq Mode where
   (==) a b = compare a b == EQ
 
@@ -31,3 +24,15 @@ instance Ord Mode where
 instance Show Mode where
   show (Mode w h) = show w ++ "x" ++ show h
   show Off = "Off"
+
+type Name = Text.Text
+
+data Info = Info
+  { name :: Name,
+    current :: Mode,
+    available :: [Mode]
+  }
+  deriving (Eq, Show)
+
+instance Ord Info where
+  compare Info {name = a} Info {name = b} = compare a b

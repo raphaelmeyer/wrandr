@@ -10,13 +10,14 @@ import qualified Brick.Widgets.Center as Center
 import qualified Brick.Widgets.Core as Core
 import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
-import qualified Focus
 import qualified Graphics.Vty as Vty
+import qualified Model
 import qualified Monitor
 
 data State = State
-  { sMonitors :: [Monitor.Info],
-    sFocus :: Maybe Focus.Focus
+  { sMonitors :: Model.Monitors,
+    sFocus :: Model.Focus,
+    sSelection :: Model.Selection
   }
 
 data Name = Name Text.Text deriving (Eq, Ord, Show)
@@ -52,7 +53,7 @@ monitorListWidget state =
     $ map (Core.padLeft (Core.Pad 1) . monitorWidget (sFocus state))
     $ sMonitors state
 
-monitorWidget :: Maybe Focus.Focus -> Monitor.Info -> T.Widget Name
+monitorWidget :: Model.Focus -> Monitor.Info -> T.Widget Name
 monitorWidget focus monitor =
   monitorFrameWidget (Maybe.isJust focusedMode) monitor
     . Core.hLimit 20
@@ -62,7 +63,7 @@ monitorWidget focus monitor =
         availableModesWidget focusedMode monitor
       ]
   where
-    focusedMode = focus >>= getFocusedMode monitor
+    focusedMode = getFocusedMode monitor focus
 
 monitorFrameWidget :: Bool -> Monitor.Info -> T.Widget Name -> T.Widget Name
 monitorFrameWidget focused monitor =
@@ -121,11 +122,14 @@ legendItems =
 titleFrameWidget :: Text.Text -> T.Widget Name -> T.Widget Name
 titleFrameWidget = Border.borderWithLabel . Core.padLeftRight 1 . Core.txt
 
-getFocusedMode :: Monitor.Info -> Focus.Focus -> Maybe Monitor.Mode
+getFocusedMode :: Monitor.Info -> Model.Focus -> Maybe Monitor.Mode
 getFocusedMode m focus =
-  if Monitor.name m == Focus.monitor focus
-    then Just $ Focus.mode focus
-    else Nothing
+  case Model.focusedMonitor focus of
+    Just monitor ->
+      if Monitor.name m == monitor
+        then Model.focusedMode focus
+        else Nothing
+    Nothing -> Nothing
 
 isModeFocused :: Maybe Monitor.Mode -> Monitor.Mode -> Bool
 isModeFocused Nothing _ = False

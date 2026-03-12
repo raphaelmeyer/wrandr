@@ -1,71 +1,33 @@
 module Focus
-  ( Focus (..),
-    first,
-    nextMonitor,
+  ( first,
     previousMonitor,
+    nextMonitor,
   )
 where
 
-import qualified Data.Maybe as Maybe
-import qualified Data.Text as Text
+import qualified Model
 import qualified Monitor
 
-data Focus = Focus
-  { monitor :: Text.Text,
-    mode :: Monitor.Mode
-  }
-  deriving (Eq, Show)
+first :: [Monitor.Info] -> Model.Focus
+first [] = Model.Focus Nothing Nothing
+first (m : _) = Model.Focus (Just $ Monitor.name m) (initialMode m)
 
-first :: [Monitor.Info] -> Maybe Focus
-first [] = Nothing
-first (m : _) = Just $ Focus (Monitor.name m) (currentMode m)
+previousMonitor :: [Monitor.Info] -> Model.Focus -> Model.Focus
+previousMonitor _ focus = focus
 
-previousMonitor :: [Monitor.Info] -> Maybe Focus -> Maybe Focus
-previousMonitor monitors focus =
-  maybe (first monitors) Just $
-    focus
-      >>= findPreviousMonitor monitors
-      >>= \prev -> Just $ Focus (Monitor.name prev) Monitor.Off
+nextMonitor :: [Monitor.Info] -> Model.Focus -> Model.Focus
+nextMonitor _ focus = focus
 
-nextMonitor :: [Monitor.Info] -> Maybe Focus -> Maybe Focus
-nextMonitor monitors focus = case focus of
-  Just f -> nextMonitor' monitors f
-  Nothing -> first monitors
-
-nextMonitor' :: [Monitor.Info] -> Focus -> Maybe Focus
-nextMonitor' [] _ = Nothing
-nextMonitor' ms f = case findNextMonitor ms f of
-  Just next -> Just $ Focus (Monitor.name next) Monitor.Off
-  Nothing -> first ms
-
-findPreviousMonitor :: [Monitor.Info] -> Focus -> Maybe Monitor.Info
-findPreviousMonitor [] _ = Nothing
-findPreviousMonitor [m] f =
-  if Monitor.name m == monitor f
-    then Just m
-    else Nothing
-findPreviousMonitor (left : right : ms) f =
-  if Monitor.name right == monitor f
-    then Just left
-    else findPreviousMonitor (right : ms) f
-
-findNextMonitor :: [Monitor.Info] -> Focus -> Maybe Monitor.Info
-findNextMonitor [] _ = Nothing
-findNextMonitor [m] f =
-  if Monitor.name m == monitor f
-    then Just m
-    else Nothing
-findNextMonitor (left : right : ms) f =
-  if Monitor.name left == monitor f
-    then Just right
-    else findNextMonitor (right : ms) f
-
-currentMode :: Monitor.Info -> Monitor.Mode
-currentMode m =
-  Maybe.fromMaybe
-    Monitor.Off
-    (findMode (Monitor.available m) (Monitor.current m))
+initialMode :: Monitor.Info -> Maybe Monitor.Mode
+initialMode m = case findMode (Monitor.available m) (Monitor.current m) of
+  Just mode -> Just mode
+  Nothing -> case Monitor.available m of
+    [] -> Nothing
+    (a : _) -> Just a
 
 findMode :: [Monitor.Mode] -> Monitor.Mode -> Maybe Monitor.Mode
 findMode [] _ = Nothing
-findMode (a : as) current = if current == a then Just a else findMode as current
+findMode (a : as) current =
+  if current == a
+    then Just a
+    else findMode as current

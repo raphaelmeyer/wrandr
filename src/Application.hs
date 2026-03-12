@@ -5,6 +5,7 @@ import qualified Brick.Types as T
 import qualified Data.Text as Text
 import qualified Focus
 import qualified Graphics.Vty as Vty
+import qualified Model
 import qualified Monitor
 import qualified UI
 import qualified WlrRandr
@@ -28,17 +29,15 @@ mkApp =
 resetMonitorInfo :: IO UI.State
 resetMonitorInfo = do
   monitors <- WlrRandr.allMonitors
-  pure $ UI.State monitors (Focus.first monitors)
+  pure $ UI.State monitors (Focus.first monitors) Model.Selection
 
 focusPreviousMonitor :: UI.State -> UI.State
-focusPreviousMonitor (UI.State monitors focus) =
-  UI.State monitors $
-    Focus.previousMonitor monitors focus
+focusPreviousMonitor (UI.State monitors focus selection) =
+  UI.State monitors (Focus.previousMonitor monitors focus) selection
 
 focusNextMonitor :: UI.State -> UI.State
-focusNextMonitor (UI.State monitors focus) =
-  UI.State monitors $
-    Focus.nextMonitor monitors focus
+focusNextMonitor (UI.State monitors focus selection) =
+  UI.State monitors (Focus.nextMonitor monitors focus) selection
 
 handleEvent :: T.BrickEvent UI.Name e -> T.EventM UI.Name UI.State ()
 handleEvent (T.VtyEvent e) = case e of
@@ -51,7 +50,7 @@ handleEvent (T.VtyEvent e) = case e of
 handleEvent _ = pure ()
 
 fakeMonitors :: UI.State
-fakeMonitors = UI.State monitors focus
+fakeMonitors = UI.State monitors focus Model.Selection
   where
     monitors =
       [ Monitor.Info

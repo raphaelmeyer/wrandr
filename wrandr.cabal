@@ -24,6 +24,7 @@ library wlr-monitors
         Exception,
         Focus,
         Json,
+        Model,
         Monitor,
         MonitorList,
         UI,
