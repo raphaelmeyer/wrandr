@@ -59,3 +59,43 @@ spec = do
     it "should focus the first available mode if the current mode is not available" $ do
       let monitors = [hdmi {Monitor.current = fhd, Monitor.available = [wqhd, hdplus]}]
       (Model.focusedMode . Focus.first $ monitors) `shouldBe` Just wqhd
+
+  describe "nextMonitor" $ do
+    it "should focus nothing when there are no monitors" $ do
+      let f = Model.Focus (Just "HDMI-1") (Just fhd)
+      Focus.nextMonitor [] f `shouldBe` Model.Focus Nothing Nothing
+
+    it "should keep focus unchanged when there is only one monitor" $ do
+      let monitors = [hdmi {Monitor.available = modes}]
+      let f = Model.Focus (Just "HDMI-1") (Just fhd)
+      Focus.nextMonitor monitors f `shouldBe` f
+
+    it "should keep focus unchanged when already on the last monitor" $ do
+      let monitors = [hdmi {Monitor.available = modes}, hdmi2 {Monitor.available = modes}]
+      let f = Model.Focus (Just "HDMI-2") (Just fhd)
+      Focus.nextMonitor monitors f `shouldBe` f
+
+    it "should focus the first monitor when no monitor is focused" $ do
+      let monitors = [hdmi {Monitor.current = fhd, Monitor.available = [fhd, wqhd]}, hdmi2 {Monitor.available = modes}]
+      let f = Model.Focus Nothing Nothing
+      Focus.nextMonitor monitors f `shouldBe` Model.Focus (Just "HDMI-1") (Just fhd)
+
+    it "should move to the next monitor" $ do
+      let monitors = [hdmi {Monitor.available = modes}, hdmi2 {Monitor.available = modes}]
+      let f = Model.Focus (Just "HDMI-1") (Just fhd)
+      Model.focusedMonitor (Focus.nextMonitor monitors f) `shouldBe` Just "HDMI-2"
+
+    it "should focus the current mode of the next monitor if it is available" $ do
+      let monitors = [hdmi {Monitor.current = fhd, Monitor.available = [fhd]}, hdmi2 {Monitor.current = wqhd, Monitor.available = [uhd4k, wqhd]}]
+      let f = Model.Focus (Just "HDMI-1") (Just fhd)
+      Model.focusedMode (Focus.nextMonitor monitors f) `shouldBe` Just wqhd
+
+    it "should focus the first available mode of the next monitor if its current mode is not available" $ do
+      let monitors = [hdmi {Monitor.current = fhd, Monitor.available = [fhd]}, hdmi2 {Monitor.current = uhd4k, Monitor.available = [wqhd, fhd]}]
+      let f = Model.Focus (Just "HDMI-1") (Just fhd)
+      Model.focusedMode (Focus.nextMonitor monitors f) `shouldBe` Just wqhd
+
+    it "should focus the first monitor when the focused monitor is not found in the list" $ do
+      let monitors = [hdmi {Monitor.current = fhd, Monitor.available = [fhd]}, hdmi2 {Monitor.available = modes}]
+      let f = Model.Focus (Just "eDP-1") (Just fhd)
+      Model.focusedMonitor (Focus.nextMonitor monitors f) `shouldBe` Just "HDMI-1"

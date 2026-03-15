@@ -16,7 +16,16 @@ previousMonitor :: [Monitor.Info] -> Model.Focus -> Model.Focus
 previousMonitor _ focus = focus
 
 nextMonitor :: [Monitor.Info] -> Model.Focus -> Model.Focus
-nextMonitor _ focus = focus
+nextMonitor [] _ = Model.Focus Nothing Nothing
+nextMonitor monitors (Model.Focus Nothing _) = first monitors
+nextMonitor monitors focus =
+  case Model.focusedMonitor focus of
+    Nothing -> focus
+    Just name ->
+      case dropWhile (\m -> Monitor.name m /= name) monitors of
+        (_ : next : _) -> Model.Focus (Just $ Monitor.name next) (initialMode next)
+        [_] -> focus
+        _ -> first monitors
 
 initialMode :: Monitor.Info -> Maybe Monitor.Mode
 initialMode m = case findMode (Monitor.available m) (Monitor.current m) of
