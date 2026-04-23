@@ -43,11 +43,16 @@ focusNextMode :: UI.State -> UI.State
 focusNextMode (UI.State monitors focus selection) =
   UI.State monitors (Focus.nextMode monitors focus) selection
 
+focusPreviousMode :: UI.State -> UI.State
+focusPreviousMode (UI.State monitors focus selection) =
+  UI.State monitors (Focus.previousMode monitors focus) selection
+
 handleEvent :: T.BrickEvent UI.Name e -> T.EventM UI.Name UI.State ()
 handleEvent (T.VtyEvent e) = case e of
   Vty.EvKey Vty.KLeft [] -> T.modify focusPreviousMonitor
   Vty.EvKey Vty.KRight [] -> T.modify focusNextMonitor
   Vty.EvKey Vty.KDown [] -> T.modify focusNextMode
+  Vty.EvKey Vty.KUp [] -> T.modify focusPreviousMode
   Vty.EvKey Vty.KEsc [] -> M.halt
   Vty.EvKey (Vty.KChar 'q') [] -> M.halt
   Vty.EvKey (Vty.KChar 'd') [] -> T.put fakeMonitors
