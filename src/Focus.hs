@@ -2,9 +2,12 @@ module Focus
   ( first,
     previousMonitor,
     nextMonitor,
+    nextMode,
   )
 where
 
+import qualified Data.List as List
+import qualified Data.Maybe as Maybe
 import qualified Model
 import qualified Monitor
 
@@ -37,6 +40,16 @@ nextMonitor monitors focus =
         (_ : next : _) -> Model.Focus (Just $ Monitor.name next) (initialMode next)
         [_] -> focus
         _ -> first monitors
+
+nextMode :: [Monitor.Info] -> Model.Focus -> Model.Focus
+nextMode [] _ = Model.Focus Nothing Nothing
+nextMode monitors (Model.Focus Nothing _) = first monitors
+nextMode monitors focus = Maybe.fromMaybe focus $ do
+  name <- Model.focusedMonitor focus
+  monitor <- List.find (\m -> Monitor.name m == name) monitors
+  mode <- Model.focusedMode focus
+  (_ : next : _) <- Just $ dropWhile (/= mode) (Monitor.available monitor)
+  return $ Model.Focus (Just name) (Just next)
 
 initialMode :: Monitor.Info -> Maybe Monitor.Mode
 initialMode m = case findMode (Monitor.available m) (Monitor.current m) of

@@ -100,6 +100,41 @@ spec = do
       let f = Model.Focus (Just "eDP-1") (Just fhd)
       Model.focusedMonitor (Focus.nextMonitor monitors f) `shouldBe` Just "HDMI-1"
 
+  describe "nextMode" $ do
+    it "should focus nothing when there are no monitors" $ do
+      let f = Model.Focus (Just "HDMI-1") (Just fhd)
+      Focus.nextMode [] f `shouldBe` Model.Focus Nothing Nothing
+
+    it "should focus the current mode of the first monitor when no monitor is focused" $ do
+      let monitors = [hdmi {Monitor.current = fhd, Monitor.available = modes}]
+      let f = Model.Focus Nothing Nothing
+      Focus.nextMode monitors f `shouldBe` Model.Focus (Just "HDMI-1") (Just fhd)
+
+    it "should focus no mode when there are no available modes" $ do
+      let monitors = [hdmi {Monitor.available = []}, hdmi2 {Monitor.available = modes}, edp {Monitor.available = modes}]
+      let f = Model.Focus (Just "HDMI-1") Nothing
+      Model.focusedMode (Focus.nextMode monitors f) `shouldBe` Nothing
+
+    it "should keep the monitor focused when there are no available modes" $ do
+      let monitors = [hdmi {Monitor.available = modes}, hdmi2 {Monitor.available = []}, edp {Monitor.available = modes}]
+      let f = Model.Focus (Just "HDMI-2") Nothing
+      Model.focusedMonitor (Focus.nextMode monitors f) `shouldBe` Just "HDMI-2"
+
+    it "should keep focus unchanged when already on the last mode" $ do
+      let monitors = [hdmi {Monitor.available = modes}]
+      let f = Model.Focus (Just "HDMI-1") (Just hdplus)
+      Focus.nextMode monitors f `shouldBe` f
+
+    it "should move to the next mode" $ do
+      let monitors = [hdmi {Monitor.available = modes}]
+      let f = Model.Focus (Just "HDMI-1") (Just wqhd)
+      Model.focusedMode (Focus.nextMode monitors f) `shouldBe` Just fhd
+
+    it "should not change the focused monitor when moving to the next mode" $ do
+      let monitors = [hdmi {Monitor.available = modes}]
+      let f = Model.Focus (Just "HDMI-1") (Just uhd4k)
+      Model.focusedMonitor (Focus.nextMode monitors f) `shouldBe` Just "HDMI-1"
+
   describe "previousMonitor" $ do
     it "should focus nothing when there are no monitors" $ do
       let f = Model.Focus (Just "HDMI-1") (Just fhd)
