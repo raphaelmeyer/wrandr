@@ -13,7 +13,18 @@ first [] = Model.Focus Nothing Nothing
 first (m : _) = Model.Focus (Just $ Monitor.name m) (initialMode m)
 
 previousMonitor :: [Monitor.Info] -> Model.Focus -> Model.Focus
-previousMonitor _ focus = focus
+previousMonitor [] _ = Model.Focus Nothing Nothing
+previousMonitor monitors (Model.Focus Nothing _) = first monitors
+previousMonitor monitors focus =
+  case Model.focusedMonitor focus of
+    Nothing -> focus
+    Just name ->
+      case break (\m -> Monitor.name m == name) monitors of
+        ([], _) -> focus
+        (_, []) -> first monitors
+        (before, _) ->
+          let previous = last before
+           in Model.Focus (Just $ Monitor.name previous) (initialMode previous)
 
 nextMonitor :: [Monitor.Info] -> Model.Focus -> Model.Focus
 nextMonitor [] _ = Model.Focus Nothing Nothing
