@@ -1,19 +1,31 @@
 # TODO list
 
-## Navigation (next steps)
+## Next steps
 
-### Monitor navigation (←/→)
+1. **Define `Model.Selection` and `Selection.hs`** — replace the placeholder
+   with a `Map`-backed newtype in `Model.hs`. Create a new `Selection.hs` module
+   with `empty`, `selected`, and a single `toggle :: Selection -> Focus ->
+   Selection` function that selects the focused mode for the focused monitor, or
+   removes the selection if that mode was already selected.
 
-1. Implement `nextMonitor` in `src/Focus.hs` — move focus to the next monitor; if already on the last monitor, keep focus (including mode) unchanged; otherwise set `focusedMode` to the current mode of the new monitor if it appears in its `available` list, else the first available mode
-2. Implement `previousMonitor` in `src/Focus.hs` — same, but backwards; if already on the first monitor, keep focus unchanged
-3. Add tests in `test/FocusSpec.hs` for both functions (no monitors, one monitor, boundary clamping, mode carry-over vs. fallback to first)
+2. **Make Focus navigation selection-aware** — `initialMode` should prefer the
+   selected mode over the current mode when navigating to a monitor. `first`,
+   `nextMonitor`, `previousMonitor` gain a `Selection` parameter. Update tests:
+   existing cases pass `Model.empty`, new cases cover selection taking
+   precedence.
 
-### Mode navigation (↑/↓)
+3. **Wire ENTER in `Application.hs`** — on ENTER, if the focused mode is already
+   selected for that monitor → `deselect`; otherwise → `select` (replacing any
+   prior selection for that monitor).
 
-4. Implement `nextMode` in `src/Focus.hs` — move focus to the next mode in `Monitor.available` for the focused monitor; clamp at last mode (no wrap); only moves if a monitor is focused
-5. Implement `previousMode` in `src/Focus.hs` — same, but backwards; clamp at first mode
-6. Wire `KUp`/`KDown` events in `src/Application.hs` (analogous to existing `KLeft`/`KRight` handlers)
-7. Add tests in `test/FocusSpec.hs` for mode navigation
+4. **Render selections in `UI.hs`** — add a second attribute (e.g. cyan) for
+   selected modes; pass `Selection` into `availableModeWidget` to highlight the
+   selected mode independently of focus.
+
+5. **Apply** — `WlrRandr.apply :: Selection -> IO ()` calls
+   `wlr-randr --output <name> --mode <w>x<h>` for each monitor in the
+   selection. Wire to `a` in `Application.hs`. Only monitors with an explicit
+   selection are passed (refineable later).
 
 ## Further steps
 
