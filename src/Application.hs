@@ -7,6 +7,7 @@ import qualified Focus
 import qualified Graphics.Vty as Vty
 import qualified Model
 import qualified Monitor
+import qualified Selection
 import qualified UI
 import qualified WlrRandr
 
@@ -29,23 +30,23 @@ mkApp =
 resetMonitorInfo :: IO UI.State
 resetMonitorInfo = do
   monitors <- WlrRandr.allMonitors
-  pure $ UI.State monitors (Focus.first monitors) Model.Selection
+  pure $ UI.State (Model.Model monitors (Focus.first monitors) Selection.empty)
 
 focusPreviousMonitor :: UI.State -> UI.State
-focusPreviousMonitor (UI.State monitors focus selection) =
-  UI.State monitors (Focus.previousMonitor monitors focus) selection
+focusPreviousMonitor (UI.State model) =
+  UI.State model {Model.focus = Focus.previousMonitor (Model.monitors model) (Model.focus model)}
 
 focusNextMonitor :: UI.State -> UI.State
-focusNextMonitor (UI.State monitors focus selection) =
-  UI.State monitors (Focus.nextMonitor monitors focus) selection
+focusNextMonitor (UI.State model) =
+  UI.State model {Model.focus = Focus.nextMonitor (Model.monitors model) (Model.focus model)}
 
 focusNextMode :: UI.State -> UI.State
-focusNextMode (UI.State monitors focus selection) =
-  UI.State monitors (Focus.nextMode monitors focus) selection
+focusNextMode (UI.State model) =
+  UI.State model {Model.focus = Focus.nextMode (Model.monitors model) (Model.focus model)}
 
 focusPreviousMode :: UI.State -> UI.State
-focusPreviousMode (UI.State monitors focus selection) =
-  UI.State monitors (Focus.previousMode monitors focus) selection
+focusPreviousMode (UI.State model) =
+  UI.State model {Model.focus = Focus.previousMode (Model.monitors model) (Model.focus model)}
 
 handleEvent :: T.BrickEvent UI.Name e -> T.EventM UI.Name UI.State ()
 handleEvent (T.VtyEvent e) = case e of
@@ -60,7 +61,7 @@ handleEvent (T.VtyEvent e) = case e of
 handleEvent _ = pure ()
 
 fakeMonitors :: UI.State
-fakeMonitors = UI.State monitors focus Model.Selection
+fakeMonitors = UI.State (Model.Model monitors focus Selection.empty)
   where
     monitors =
       [ Monitor.Info

@@ -1,5 +1,6 @@
 module Model where
 
+import qualified Data.Map.Strict as Map
 import qualified Monitor
 
 type Monitors = [Monitor.Info]
@@ -10,7 +11,7 @@ data Focus = Focus
   }
   deriving (Eq, Show)
 
-data Selection = Selection
+newtype Selection = Selection (Map.Map Monitor.Name Monitor.Mode)
 
 data Model = Model
   { monitors :: [Monitor.Info],

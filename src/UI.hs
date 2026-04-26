@@ -14,11 +14,7 @@ import qualified Graphics.Vty as Vty
 import qualified Model
 import qualified Monitor
 
-data State = State
-  { sMonitors :: Model.Monitors,
-    sFocus :: Model.Focus,
-    sSelection :: Model.Selection
-  }
+newtype State = State Model.Model
 
 data Name = Name Text.Text deriving (Eq, Ord, Show)
 
@@ -47,11 +43,11 @@ applicationWidget state =
       ]
 
 monitorListWidget :: State -> T.Widget Name
-monitorListWidget state =
+monitorListWidget (State model) =
   Core.padAll 1
     . Core.hBox
-    $ map (Core.padLeft (Core.Pad 1) . monitorWidget (sFocus state))
-    $ sMonitors state
+    $ map (Core.padLeft (Core.Pad 1) . monitorWidget (Model.focus model))
+    $ Model.monitors model
 
 monitorWidget :: Model.Focus -> Monitor.Info -> T.Widget Name
 monitorWidget focus monitor =

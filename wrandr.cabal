@@ -27,6 +27,7 @@ library wlr-monitors
         Model,
         Monitor,
         MonitorList,
+        Selection,
         UI,
         WlrRandr
 
@@ -55,7 +56,8 @@ test-suite wrandr-test
         FocusSpec,
         JsonSpec,
         MonitorListSpec,
-        MonitorSpec
+        MonitorSpec,
+        SelectionSpec
 
     build-depends:
         wlr-monitors,
