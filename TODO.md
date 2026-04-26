@@ -2,25 +2,31 @@
 
 ## Next steps
 
-1. **Define `Model.Selection` and `Selection.hs`** — replace the placeholder
-   with a `Map`-backed newtype in `Model.hs`. Create a new `Selection.hs` module
-   with `empty`, `selected`, and a single `toggle :: Selection -> Focus ->
-   Selection` function that selects the focused mode for the focused monitor, or
-   removes the selection if that mode was already selected.
+1. ~~**Define `Model.Selection` and `Selection.hs`**~~ ✓
 
-2. **Make Focus navigation selection-aware** — `initialMode` should prefer the
+2. **Render selections in `UI.hs`**
+   - Add `aSelected :: Attr.AttrName` (cyan) alongside `aFocus` and register it
+     in `attributes`.
+   - Thread `Model.Selection` down the call chain:
+     `monitorListWidget` extracts `Model.selection model` and passes it to
+     `monitorWidget`; `monitorWidget` passes it to `availableModesWidget`;
+     `availableModesWidget` passes it to `availableModeWidget`.
+   - In `availableModeWidget`, look up whether the mode is selected via
+     `Selection.selected selection (Monitor.name monitor)`. Apply `aSelected`
+     when selected, `aFocus` when focused; focus takes visual precedence when
+     both apply (a selected+focused mode shows as focused).
+   - No new test module needed — this is visual-only. Verify by loading fake
+     monitors with `d` and checking that a hardcoded selection renders in cyan.
+
+3. **Wire ENTER in `Application.hs`** — on ENTER, call `Selection.onSelect` to
+   toggle the focused mode for the focused monitor. Update the `selection` in the
+   model.
+
+4. **Make Focus navigation selection-aware** — `initialMode` should prefer the
    selected mode over the current mode when navigating to a monitor. `first`,
    `nextMonitor`, `previousMonitor` gain a `Selection` parameter. Update tests:
-   existing cases pass `Model.empty`, new cases cover selection taking
+   existing cases pass `Selection.empty`, new cases cover selection taking
    precedence.
-
-3. **Wire ENTER in `Application.hs`** — on ENTER, if the focused mode is already
-   selected for that monitor → `deselect`; otherwise → `select` (replacing any
-   prior selection for that monitor).
-
-4. **Render selections in `UI.hs`** — add a second attribute (e.g. cyan) for
-   selected modes; pass `Selection` into `availableModeWidget` to highlight the
-   selected mode independently of focus.
 
 5. **Apply** — `WlrRandr.apply :: Selection -> IO ()` calls
    `wlr-randr --output <name> --mode <w>x<h>` for each monitor in the
